@@ -1,0 +1,17 @@
+title: "Bach Double Violin Concerto (BWV 1043)"
+movements:
+  - title: "I. Vivace"
+    bars: 88
+    beats_per_bar: 4
+    target_bpm: 96
+    color: red
+  - title: "II. Largo ma non tanto"
+    bars: 50
+    beats_per_bar: 4
+    target_bpm: 31
+    color: blue
+  - title: "III. Allegro"
+    bars: 154
+    beats_per_bar: 3
+    target_bpm: 100
+    color: green

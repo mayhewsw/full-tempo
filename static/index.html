@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Apple Music Classical — Duration Explorer</title>
+  <script src="https://cdn.plot.ly/plotly-2.35.2.min.js"></script>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: #0a0a0a;
+      color: #f0f0f0;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 48px 24px;
+    }
+
+    h1 {
+      font-size: 1.4rem;
+      font-weight: 500;
+      color: #aaa;
+      margin-bottom: 32px;
+      letter-spacing: 0.02em;
+    }
+
+    #search-row {
+      display: flex;
+      gap: 10px;
+      width: 100%;
+      max-width: 560px;
+      margin-bottom: 16px;
+    }
+
+    #search-input {
+      flex: 1;
+      padding: 12px 16px;
+      border-radius: 10px;
+      border: 1px solid #333;
+      background: #1a1a1a;
+      color: #f0f0f0;
+      font-size: 1rem;
+      outline: none;
+      transition: border-color 0.15s;
+    }
+    #search-input:focus { border-color: #fa243c; }
+
+    button {
+      padding: 12px 20px;
+      border-radius: 10px;
+      border: none;
+      background: #fa243c;
+      color: #fff;
+      font-size: 0.95rem;
+      cursor: pointer;
+      transition: opacity 0.15s;
+    }
+    button:hover { opacity: 0.85; }
+    button:disabled { opacity: 0.4; cursor: default; }
+
+    #results-list {
+      width: 100%;
+      max-width: 560px;
+      margin-bottom: 24px;
+    }
+
+    .result-item {
+      padding: 12px 16px;
+      background: #1a1a1a;
+      border: 1px solid #2a2a2a;
+      border-radius: 8px;
+      margin-bottom: 8px;
+      cursor: pointer;
+      transition: border-color 0.15s, background 0.15s;
+    }
+    .result-item:hover { background: #222; border-color: #fa243c; }
+    .result-item .title { font-size: 0.95rem; }
+    .result-item .id { font-size: 0.75rem; color: #666; margin-top: 2px; }
+
+    #status {
+      color: #888;
+      font-size: 0.9rem;
+      margin-bottom: 24px;
+      min-height: 1.2em;
+    }
+
+    #chart {
+      width: 100%;
+      max-width: 1400px;
+    }
+
+    #unclassified {
+      width: 100%;
+      max-width: 1400px;
+      margin-top: 14px;
+      display: none;
+      color: #aaa;
+      background: #111;
+      border: 1px solid #222;
+      border-radius: 10px;
+      padding: 14px 16px;
+    }
+    #unclassified h2 {
+      font-size: 0.95rem;
+      font-weight: 600;
+      margin-bottom: 8px;
+      color: #ddd;
+    }
+    #unclassified .note {
+      font-size: 0.85rem;
+      color: #888;
+      margin-bottom: 10px;
+    }
+    #unclassified ul {
+      list-style: none;
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 6px 14px;
+      padding: 0;
+      margin: 0;
+    }
+    #unclassified li {
+      font-size: 0.88rem;
+      color: #aaa;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    #unclassified details {
+      border: 1px solid #1f1f1f;
+      border-radius: 8px;
+      padding: 10px 12px;
+      background: #0d0d0d;
+    }
+    #unclassified summary {
+      cursor: pointer;
+      list-style: none;
+      font-size: 0.9rem;
+      color: #ddd;
+      outline: none;
+    }
+    #unclassified summary::-webkit-details-marker { display: none; }
+    #unclassified .meta {
+      color: #777;
+      font-size: 0.85rem;
+      margin-left: 6px;
+    }
+    #unclassified .sublist {
+      margin-top: 8px;
+      display: grid;
+      gap: 4px;
+    }
+    #unclassified a {
+      color: #9ca3af;
+      text-decoration: none;
+      font-size: 0.85rem;
+    }
+    #unclassified a:hover { color: #fff; text-decoration: underline; }
+  </style>
+</head>
+<body>
+  <h1>Apple Music Classical — Duration Explorer</h1>
+
+  <div id="search-row">
+    <input id="search-input" type="text" placeholder="Search for a work…" autocomplete="off" />
+    <button id="search-btn">Search</button>
+  </div>
+
+  <div id="results-list"></div>
+  <div id="status"></div>
+  <div id="chart"></div>
+  <div id="unclassified"></div>
+
+  <script src="/static/app.js"></script>
+</body>
+</html>
