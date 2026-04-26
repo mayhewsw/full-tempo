@@ -10,7 +10,7 @@ set -euo pipefail
 #   - gcloud installed + authenticated (gcloud auth login)
 #   - permissions to use Cloud Build + Cloud Run in the project
 
-PROJECT_ID="cloud-run-projects-328620"
+PROJECT_ID="${GCP_PROJECT_ID:?Set GCP_PROJECT_ID env var}"
 REGION="us-east1"
 SERVICE="apple-music-distribution"
 
