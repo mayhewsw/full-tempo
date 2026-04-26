@@ -9,6 +9,9 @@ wheels/
 # Virtual environments
 .venv
 
+# Local environment variables
+.env
+
 # Claude session data
 .claude/
 

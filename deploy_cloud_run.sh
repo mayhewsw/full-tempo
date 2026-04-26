@@ -10,7 +10,16 @@ set -euo pipefail
 #   - gcloud installed + authenticated (gcloud auth login)
 #   - permissions to use Cloud Build + Cloud Run in the project
 
-PROJECT_ID="${GCP_PROJECT_ID:?Set GCP_PROJECT_ID env var}"
+ENV_FILE="$(dirname "$0")/.env"
+if [[ ! -f "$ENV_FILE" ]]; then
+  echo "ERROR: .env file not found at $ENV_FILE" >&2
+  echo "Create it with: echo 'GCP_PROJECT_ID=your-project-id' > .env" >&2
+  exit 1
+fi
+# shellcheck source=.env
+source "$ENV_FILE"
+
+PROJECT_ID="${GCP_PROJECT_ID:?GCP_PROJECT_ID is not set in .env}"
 REGION="us-east1"
 SERVICE="apple-music-distribution"
 
