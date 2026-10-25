@@ -6,8 +6,6 @@ median duration has drifted over the decades.
 
 Live at **https://full-tempo-1065495173877.us-east1.run.app**
 
-![Search](docs/screenshots/home.jpg)
-
 ## Duration distributions
 
 For each movement: every recording's duration as a point, positioned by
