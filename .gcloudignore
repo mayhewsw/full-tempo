@@ -1,0 +1,22 @@
+# Cloud Build upload context. Deliberately NOT based on .gitignore's
+# defaults (gcloud falls back to .gitignore when no .gcloudignore exists) —
+# .gitignore excludes data/*.sqlite because it's a large generated binary
+# that doesn't belong in git, but that same file MUST be included in the
+# Cloud Build upload since the Dockerfile bakes it into the image. Keep
+# this file explicit rather than relying on that fallback.
+
+.git/
+.gitignore
+.venv/
+__pycache__/
+*.py[oc]
+.claude/
+.cache/
+.env
+
+# Local dev/export artifacts — never needed in the build context.
+*.json
+!sample_recording.json
+mbdump_subset/
+*.tar.bz2
+*.csv

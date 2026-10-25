@@ -3,6 +3,7 @@ import json
 from collections import defaultdict
 from pathlib import Path
 
+import matplotlib
 import matplotlib.pyplot as plt
 import numpy as np
 
@@ -19,6 +20,7 @@ def parse_args():
     )
     parser.add_argument("json_file", help="Path to the work JSON file, e.g. ludwig-van-beethoven-1770-pp252.json")
     parser.add_argument("--sidecar", help="Path to YAML sidecar config (default: same name as JSON with .yaml extension)")
+    parser.add_argument("-o", "--output", help="Save the figure to this path instead of opening an interactive window")
     return parser.parse_args()
 
 
@@ -30,16 +32,19 @@ def load_movements(data):
     index and picking the most common one.
     """
     by_index = defaultdict(lambda: defaultdict(list))
-    for key, durations in data.items():
+    for key, entries in data.items():
+        if "||" not in key:
+            continue  # e.g. the "_title" metadata key added by app.py's cache
         idx_str, title = key.split("||", 1)
-        by_index[int(idx_str)][title].extend(durations)
+        by_index[int(idx_str)][title].extend(entries)
 
     movements = []
     for idx in sorted(by_index.keys()):
         title_groups = by_index[idx]
         best_title = max(title_groups, key=lambda t: len(title_groups[t]))
-        all_durations = [d for durations in title_groups.values() for d in durations]
-        movements.append((idx, best_title, all_durations))
+        all_entries = [e for entries in title_groups.values() for e in entries]
+        durations_ms = [e["ms"] for e in all_entries]
+        movements.append((idx, best_title, durations_ms))
 
     return movements
 
@@ -52,7 +57,7 @@ def load_sidecar(path):
         return yaml.safe_load(f) or {}
 
 
-def plot_movements(movements, sidecar, piece_title):
+def plot_movements(movements, sidecar, piece_title, output=None):
     n = len(movements)
     fig, axes = plt.subplots(nrows=1, ncols=n, figsize=(6 * n, 5))
     if n == 1:
@@ -93,11 +98,17 @@ def plot_movements(movements, sidecar, piece_title):
         ax.legend()
 
     plt.tight_layout(rect=[0, 0, 1, 0.95])
-    plt.show()
+    if output:
+        fig.savefig(output, dpi=150)
+        print(f"Saved to {output}")
+    else:
+        plt.show()
 
 
 def main():
     args = parse_args()
+    if args.output:
+        matplotlib.use("Agg")
     json_path = Path(args.json_file)
 
     with open(json_path) as f:
@@ -117,7 +128,7 @@ def main():
         print(f"Warning: sidecar {args.sidecar} not found, proceeding without BPM metadata.")
 
     piece_title = sidecar.get("title", json_path.stem)
-    plot_movements(movements, sidecar, piece_title)
+    plot_movements(movements, sidecar, piece_title, output=args.output)
 
 
 if __name__ == "__main__":

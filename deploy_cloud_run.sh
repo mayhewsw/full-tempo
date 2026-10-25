@@ -21,17 +21,26 @@ source "$ENV_FILE"
 
 PROJECT_ID="${GCP_PROJECT_ID:?GCP_PROJECT_ID is not set in .env}"
 REGION="us-east1"
-SERVICE="apple-music-distribution"
+SERVICE="full-tempo"
 
 gcloud config set project "$PROJECT_ID"
 gcloud services enable run.googleapis.com cloudbuild.googleapis.com
 
-gcloud builds submit --tag "gcr.io/$PROJECT_ID/$SERVICE"
+# --timeout: the build context includes the ~1.8GB baked-in SQLite DB (see
+# data/README.md), so the default 10-minute Cloud Build timeout can be tight
+# depending on upload bandwidth.
+gcloud builds submit --tag "gcr.io/$PROJECT_ID/$SERVICE" --timeout=20m
 
+# --memory: the image bakes in a ~1.8GB SQLite file (data/musicbrainz_classical.sqlite,
+# see data/README.md) that's queried read-only via OS page cache. 4Gi gives enough
+# headroom to keep that fully cached plus Python/Flask overhead and a few concurrent
+# requests. Not setting --min-instances: this stays scale-to-zero (no idle billing),
+# at the cost of a slower cold start since Cloud Run has to pull the ~2GB image first —
+# fine for a low-traffic personal app; revisit if cold starts become annoying.
 gcloud run deploy "$SERVICE" \
   --region "$REGION" \
   --image "gcr.io/$PROJECT_ID/$SERVICE" \
-  --set-env-vars "WORK_CACHE_GCS_BUCKET=apple-music-distribution-files,WORK_CACHE_TTL_SECONDS=0" \
+  --memory 4Gi \
   --allow-unauthenticated \
   --port 8080
 

@@ -3,29 +3,31 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Apple Music Classical — Duration Explorer</title>
+  <title>Full Tempo — Duration Explorer</title>
   <script src="https://cdn.plot.ly/plotly-2.35.2.min.js"></script>
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
 
     body {
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-      background: #0a0a0a;
-      color: #f0f0f0;
+      background: #faf9f7;
+      color: #1a1a1a;
       min-height: 100vh;
       display: flex;
       flex-direction: column;
       align-items: center;
-      padding: 48px 24px;
+      padding: 48px 20px;
     }
 
     h1 {
       font-size: 1.4rem;
-      font-weight: 500;
-      color: #aaa;
+      font-weight: 600;
+      color: #1a1a1a;
       margin-bottom: 32px;
-      letter-spacing: 0.02em;
+      letter-spacing: 0.01em;
+      cursor: pointer;
     }
+    h1:hover { color: #c0293f; }
 
     #search-row {
       display: flex;
@@ -39,26 +41,31 @@
       flex: 1;
       padding: 12px 16px;
       border-radius: 10px;
-      border: 1px solid #333;
-      background: #1a1a1a;
-      color: #f0f0f0;
+      border: 1px solid #ddd8d0;
+      background: #fff;
+      color: #1a1a1a;
       font-size: 1rem;
       outline: none;
-      transition: border-color 0.15s;
+      transition: border-color 0.15s, box-shadow 0.15s;
     }
-    #search-input:focus { border-color: #fa243c; }
+    #search-input::placeholder { color: #999; }
+    #search-input:focus {
+      border-color: #c0293f;
+      box-shadow: 0 0 0 3px rgba(192, 41, 63, 0.12);
+    }
 
     button {
       padding: 12px 20px;
       border-radius: 10px;
       border: none;
-      background: #fa243c;
+      background: #c0293f;
       color: #fff;
       font-size: 0.95rem;
+      font-weight: 500;
       cursor: pointer;
       transition: opacity 0.15s;
     }
-    button:hover { opacity: 0.85; }
+    button:hover { opacity: 0.88; }
     button:disabled { opacity: 0.4; cursor: default; }
 
     #results-list {
@@ -69,22 +76,25 @@
 
     .result-item {
       padding: 12px 16px;
-      background: #1a1a1a;
-      border: 1px solid #2a2a2a;
-      border-radius: 8px;
+      background: #fff;
+      border: 1px solid #ece9e4;
+      border-radius: 10px;
+      box-shadow: 0 1px 2px rgba(20, 20, 20, 0.03);
       margin-bottom: 8px;
       cursor: pointer;
-      transition: border-color 0.15s, background 0.15s;
+      transition: border-color 0.15s, box-shadow 0.15s;
     }
-    .result-item:hover { background: #222; border-color: #fa243c; }
-    .result-item .title { font-size: 0.95rem; }
-    .result-item .id { font-size: 0.75rem; color: #666; margin-top: 2px; }
+    .result-item:hover { border-color: #c0293f; box-shadow: 0 2px 6px rgba(192, 41, 63, 0.1); }
+    .result-item .title { font-size: 0.95rem; color: #1a1a1a; }
+    .result-item .count { font-size: 0.8rem; color: #888; }
+    .result-item .id { font-size: 0.75rem; color: #999; margin-top: 2px; }
 
     #status {
-      color: #888;
+      color: #777;
       font-size: 0.9rem;
       margin-bottom: 24px;
       min-height: 1.2em;
+      text-align: center;
     }
 
     #chart {
@@ -92,22 +102,104 @@
       max-width: 1400px;
     }
 
+    #work-header {
+      display: none;
+      align-items: center;
+      gap: 16px;
+      width: 100%;
+      max-width: 1400px;
+      margin-bottom: 28px;
+    }
+    #back-btn {
+      flex-shrink: 0;
+      background: #fff;
+      color: #555;
+      border: 1px solid #ddd8d0;
+      padding: 10px 16px;
+      border-radius: 10px;
+      font-size: 0.9rem;
+      font-weight: 500;
+      cursor: pointer;
+      transition: border-color 0.15s, color 0.15s;
+    }
+    #back-btn:hover { border-color: #c0293f; color: #c0293f; }
+    #work-title {
+      font-size: 1.25rem;
+      font-weight: 600;
+      color: #1a1a1a;
+      flex: 1;
+      min-width: 0;
+    }
+
+    .section-heading {
+      font-size: 1rem;
+      font-weight: 600;
+      color: #1a1a1a;
+      margin: 32px 0 16px;
+    }
+
+    /* Flex, not grid: grid's auto-fit/minmax forces one uniform column width
+       for every panel, but each panel's minimum width should scale with its
+       own recording count (set per-panel inline in app.js, via flex-basis +
+       min-width) — a sparse 50-recording movement and a packed 700-recording
+       one shouldn't be squeezed into the same column width. There are two
+       of these per work page (duration distributions, median duration over
+       time), so this is a class, not an id. */
+    .movement-grid {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 20px;
+    }
+
+    .movement-panel {
+      background: #fff;
+      border: 1px solid #ece9e4;
+      border-radius: 14px;
+      box-shadow: 0 1px 3px rgba(20, 20, 20, 0.05);
+      padding: 16px 12px 8px;
+      flex-grow: 1;
+      overflow: hidden; /* never let a mis-measured chart bleed into neighbors */
+    }
+
+    .movement-title {
+      font-size: 0.92rem;
+      font-weight: 600;
+      color: #1a1a1a;
+      text-align: center;
+      margin-bottom: 4px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .movement-plot {
+      width: 100%;
+    }
+
+    .no-data {
+      padding: 120px 10px;
+      text-align: center;
+      color: #999;
+      font-size: 0.85rem;
+    }
+
     #unclassified {
       width: 100%;
       max-width: 1400px;
       margin-top: 14px;
       display: none;
-      color: #aaa;
-      background: #111;
-      border: 1px solid #222;
-      border-radius: 10px;
-      padding: 14px 16px;
+      color: #555;
+      background: #fff;
+      border: 1px solid #ece9e4;
+      border-radius: 14px;
+      box-shadow: 0 1px 3px rgba(20, 20, 20, 0.05);
+      padding: 16px 18px;
     }
     #unclassified h2 {
       font-size: 0.95rem;
       font-weight: 600;
       margin-bottom: 8px;
-      color: #ddd;
+      color: #1a1a1a;
     }
     #unclassified .note {
       font-size: 0.85rem;
@@ -124,27 +216,27 @@
     }
     #unclassified li {
       font-size: 0.88rem;
-      color: #aaa;
+      color: #666;
       overflow: hidden;
       text-overflow: ellipsis;
       white-space: nowrap;
     }
     #unclassified details {
-      border: 1px solid #1f1f1f;
+      border: 1px solid #ece9e4;
       border-radius: 8px;
       padding: 10px 12px;
-      background: #0d0d0d;
+      background: #faf9f7;
     }
     #unclassified summary {
       cursor: pointer;
       list-style: none;
       font-size: 0.9rem;
-      color: #ddd;
+      color: #333;
       outline: none;
     }
     #unclassified summary::-webkit-details-marker { display: none; }
     #unclassified .meta {
-      color: #777;
+      color: #999;
       font-size: 0.85rem;
       margin-left: 6px;
     }
@@ -154,15 +246,20 @@
       gap: 4px;
     }
     #unclassified a {
-      color: #9ca3af;
+      color: #666;
       text-decoration: none;
       font-size: 0.85rem;
     }
-    #unclassified a:hover { color: #fff; text-decoration: underline; }
+    #unclassified a:hover { color: #c0293f; text-decoration: underline; }
   </style>
 </head>
 <body>
-  <h1>Apple Music Classical — Duration Explorer</h1>
+  <h1 id="home-link">Full Tempo — Duration Explorer</h1>
+
+  <div id="work-header">
+    <button id="back-btn">← Back</button>
+    <h2 id="work-title"></h2>
+  </div>
 
   <div id="search-row">
     <input id="search-input" type="text" placeholder="Search for a work…" autocomplete="off" />

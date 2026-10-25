@@ -21,3 +21,6 @@ wheels/
 # Generated data files (re-fetch with get_durations.py)
 *.json
 !sample_recording.json
+
+# Trimmed MusicBrainz SQLite DB (regenerate — see data/README.md)
+data/*.sqlite
